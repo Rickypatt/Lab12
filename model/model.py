@@ -1,3 +1,5 @@
+import copy
+
 import networkx as nx
 from database.DAO import DAO
 
@@ -6,6 +8,8 @@ class Model:
     def __init__(self):
         self._idMap = {}
         self._graph = nx.Graph()
+        self.solBest = []
+        self.bestCosto = 0
 
     def buildGraph(self, country, anno):
         self._graph.clear()
@@ -31,16 +35,48 @@ class Model:
         ordinato = sorted(diz.items(), key=lambda item: item[1], reverse=True)
         return ordinato
 
-    def getOptPath(self,n):
+    def getOptPath(self, nEdges):
 
         self.solBest = []
         self.bestCosto = 0
-        self.ricorsione([],n)
+        parziale = []
+        for start in self._graph.nodes:
+            self.ricorsione(parziale, nEdges, start, [start])
         return self.solBest,self.bestCosto
 
-    def ricorsione(self,parziale,n):
+    def ricorsione(self,parziale,nEdges, start, visitati):
+
+        if len(parziale) > 0:
+            nodoCorrente = parziale[-1][1]
+        else:
+            nodoCorrente = start
+
+        if len(parziale) == nEdges:
+            if nodoCorrente == start:
+                if self.score(parziale) > self.bestCosto:
+                    self.bestCosto = self.score(parziale)
+                    self.solBest = copy.deepcopy(parziale)
+        else:
+            for v in self._graph.neighbors(nodoCorrente):
+                if v == start and len(parziale) == nEdges - 1:
+                        # Ultimo passo: torna al nodo iniziale
+                        parziale.append((nodoCorrente, v, self._graph[nodoCorrente][v]['weight']))
+                        self.ricorsione(parziale, nEdges, start, visitati)
+                        parziale.pop()
+                elif v not in visitati:
+                    parziale.append((nodoCorrente, v, self._graph[nodoCorrente][v]['weight']))
+                    visitati.append(v)
+                    self.ricorsione(parziale, nEdges, start, visitati)
+                    visitati.remove(v)
+                    parziale.pop()
 
 
+    def score(self,listaDiArchi):
+        tot = 0
+        for i in listaDiArchi:
+            tot += i[2]
+
+        return tot
 
     def getCountry(self):
         return DAO.getCountry()

@@ -53,13 +53,39 @@ class Controller:
         self._view.update_page()
 
     def handle_volume(self, e):
+        self._view.txtOut2.controls.clear()
         dizionario = self._model.getPesoVicini()
         for i in dizionario:
             self._view.txtOut2.controls.append(ft.Text(f"{i[0]} --> {i[1]}"))
             self._view.update_page()
 
 
-
-
     def handle_path(self, e):
-        pass
+        numArchi = self._view.txtN.value
+
+        if numArchi is None:
+            self._view.txtOut3.controls.clear()
+            self._view.txtOut3.controls.append(ft.Text("Inserisci un numero intero > di 2"))
+            self._view.update_page()
+
+        try:
+            intArchi = int(numArchi)
+            if intArchi < 2:
+                self._view.txtOut3.controls.clear()
+                self._view.txtOut3.controls.append(ft.Text("Inserisci un numero intero > di 2"))
+                self._view.update_page()
+
+            solOtt, costoOtt = self._model.getOptPath(intArchi)
+            self._view.txtOut3.controls.clear()
+            self._view.txtOut3.controls.append(ft.Text(f"Peso cammino massimo: {costoOtt}"))
+            for i in solOtt:
+                self._view.txtOut3.controls.append(ft.Text(f"{i[0]} --> {i[1]}: {i[2]}"))
+            self._view.update_page()
+        except ValueError:
+            self._view.txtOut3.controls.clear()
+            self._view.txtOut3.controls.append(ft.Text("Inserisci un numero intero"))
+            self._view.update_page()
+
+
+
+
